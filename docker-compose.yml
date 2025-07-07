@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP port
+      - "15672:15672" # Management UI port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.109.0
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yml", "${OTELCOL_ARGS}"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - 4317:4317
+      - 4318:4318
+  
+  # jaeger:
+  #   image: jaegertracing/all-in-one:1.71.0
+  #   ports:
+  #     - "16686:16686"
+  #     - "4317:4317"
+  #   environment:
+  #     - COLLECTOR_OTLP_ENABLED=true
+
+volumes:
+  rabbitmq_data:
+  redis_data:
